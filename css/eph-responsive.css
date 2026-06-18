@@ -173,13 +173,6 @@
     margin-right: 0;
   }
 
-  /* ---------- Tentang ---------- */
-  #about #eph {
-    float: none;
-    display: block;
-    margin: 0 auto 14px;
-    width: 130px;
-  }
 
   /* ---------- Popup peta ---------- */
   .leaflet-popup-content {
