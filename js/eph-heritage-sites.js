@@ -251,9 +251,11 @@ function renderEventsInPanel(qid) {
   let container = record.panelElem.querySelector(`#events-container-${qid}`);
   if (!container) return; 
 
+  // Siapkan URL yang mengarah langsung ke bagian Peristiwa Penting (P793) di Wikidata
+  let wikiUrl = `https://www.wikidata.org/wiki/${qid}#P793`;
+
   if (record.events && record.events.length > 0) {
     
-    // TAMBAHAN: Urutan baku yang kamu minta
     const EVENT_ORDER = {
       'konstruksi': 1,
       'dibuka untuk umum': 2,
@@ -266,27 +268,34 @@ function renderEventsInPanel(qid) {
       let orderA = EVENT_ORDER[a.label.toLowerCase()] || 99;
       let orderB = EVENT_ORDER[b.label.toLowerCase()] || 99;
       
-      // Aturan 1: Urutkan berdasarkan prioritas di EVENT_ORDER (Konstruksi -> Dibuka -> dst)
       if (orderA !== orderB) {
         return orderA - orderB;
       }
-      
-      // Aturan 2: Jika peristiwanya sama (misal ada 2 "renovasi"), urutkan berdasarkan tahun (kronologis)
       return a.sortYear - b.sortYear;
     });
 
     let html = '';
+    
+    // Tautan [Sunting] 
+    let tautanSunting = ` <a href="${wikiUrl}" target="_blank" class="sunting-link" title="Sunting peristiwa di Wikidata">[Sunting]</a>`;
+
     record.events.forEach(ev => {
       let capLabel = ev.label.charAt(0).toUpperCase() + ev.label.slice(1);
       let timeText = ev.time ? ev.time : ''; 
       
-      html += `<p>${capLabel}: ${timeText}</p>`;
+      // Sisipkan tautan sunting tepat di akhir teks dalam elemen <p>
+      html += `<p>${capLabel}: ${timeText}${tautanSunting}</p>`;
     });
     
     container.insertAdjacentHTML('beforebegin', html);
     container.remove();
 
   } else {
+    // Skenario jika tidak ada data peristiwa sama sekali
+    // Alih-alih hanya menghapus container, kita render tautan "Tambahkan data"
+    let tautanTambah = `<p><a href="${wikiUrl}" target="_blank" class="sunting-link" title="Tambahkan peristiwa di Wikidata">Tambahkan data</a></p>`;
+    
+    container.insertAdjacentHTML('beforebegin', tautanTambah);
     container.remove();
   }
 }
