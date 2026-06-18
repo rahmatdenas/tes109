@@ -1,5 +1,5 @@
 'use strict';
-const IKON_SUNTING = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 20 20" style="vertical-align: middle; margin-left: 3px; margin-bottom: 2px;"><path fill="#3366cc" d="M13.43 1.9a1.86 1.86 0 0 1 2.62 0l1.93 1.93a1.86 1.86 0 0 1 0 2.63l-10.9 10.9L2 18l.82-5.07z"/></svg>`;
+const IKON_SUNTING = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 20 20" style="vertical-align: middle; margin-left: 3px; margin-bottom: 2px;"><path fill="#a22" d="M13.43 1.9a1.86 1.86 0 0 1 2.62 0l1.93 1.93a1.86 1.86 0 0 1 0 2.63l-10.9 10.9L2 18l.82-5.07z"/></svg>`;
 // ============================================================
 // FUNGSI UTILITAS (Penerjemah Tanggal & Presisi Wikidata)
 // ============================================================
