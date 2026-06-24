@@ -220,8 +220,8 @@ function processHashChange() {
           if (isFetching) {
             indexList.innerHTML = `
               <div style="padding: 40px 20px; text-align: center; line-height: 1.6;">
-                <h3 style="margin-bottom: 10px; color: #333;">Sedang Menarik Data...</h3>
-                <p style="color: #666; margin-bottom: 25px;">Mohon tunggu sebentar, satpam Wikidata sedang mencari dan menyusun daftar entitas untuk Anda.</p>
+                <h3 style="margin-bottom: 10px; margin-top:0; color: #333;">Sedang Menarik Data...</h3>
+                <p style="color: #666; margin-bottom: 25px;">Mohon tunggu sebentar, Wikidata sedang mencari dan menyusun daftar entitas untuk Anda.</p>
                 <div class="loader" style="margin: 0 auto; width: 40px; height: 40px; border-width: 4px;"></div>
               </div>
             `;
