@@ -1026,7 +1026,7 @@ let isBersejarah = false;
     teksJudul = `Informasi ${currentNamaKlaster} Bersejarah`;
   }
 
-  let designationsHtml = `<h2 style="margin-top:0px">${teksJudul} ${tautanSuntingRingkasan}</h2>`;
+  let designationsHtml = `<h2 style="margin-top:10px">${teksJudul} ${tautanSuntingRingkasan}</h2>`;
   designationsHtml += '<ul class="designations">';
 
   // Siapkan daftar provinsi & Lokasi
@@ -1248,7 +1248,7 @@ function renderHistoricalImagesInPanel(qid) {
     
     let judulGaleriUtama = '';
     if (record.pastImage || record.interiorImage || (record.vicinityImages && record.vicinityImages.length > 0)) {
-      judulGaleriUtama = `<h2 style="margin-bottom:10px;">Galeri ${tautanSuntingGaleri}</h2>`;
+      judulGaleriUtama = `<h2 style="margin-top:10px;margin-bottom:10px;">Galeri ${tautanSuntingGaleri}</h2>`;
     }
     
     container.innerHTML = judulGaleriUtama + html;
