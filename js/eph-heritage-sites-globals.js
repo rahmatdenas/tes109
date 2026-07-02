@@ -3,59 +3,58 @@
 const BASE_TITLE = 'WikiJelajah';
 
 const KUMPULAN_KUERI_0 = {
-  'universal': `SELECT DISTINCT ?SQ ?sLabel ?PQ ?pLabel ?lLabel ?tM ?tP
-  WHERE {
-    VALUES ?j { <PLACEHOLDER_JENIS> }
-    <PLACEHOLDER_KURUNG_BUKA>
-      <PLACEHOLDER_WILAYAH_1>
-      ?s wdt:P31 ?j ;
-         wdt:<PLACEHOLDER_PROP_LOKASI> ?l .
-      <PLACEHOLDER_HIERARKI_LOKASI>
-    <PLACEHOLDER_KURUNG_TUTUP>
-    <PLACEHOLDER_UNION_EKSTRA>
-    OPTIONAL {
-      ?s p:<PLACEHOLDER_PROP_TAHUN> ?iS .
-      ?iS psv:<PLACEHOLDER_PROP_TAHUN> ?iN .
-      ?iN wikibase:timeValue ?tM ;
-          wikibase:timePrecision ?tP .
-    }
-    BIND(SUBSTR(STR(?s), 32) AS ?SQ) .
-    BIND(SUBSTR(STR(?p), 32) AS ?PQ) .
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
-  }`,
+'universal': `SELECT DISTINCT ?SQ ?sLabel ?PQ ?pLabel ?lLabel ?tM ?tP
+WHERE {
+VALUES ?j { <PLACEHOLDER_JENIS> }
+<PLACEHOLDER_KURUNG_BUKA>
+<PLACEHOLDER_WILAYAH_1>
+?s wdt:P31 ?j ;
+wdt:<PLACEHOLDER_PROP_LOKASI> ?l .
+<PLACEHOLDER_HIERARKI_LOKASI>
+<PLACEHOLDER_KURUNG_TUTUP>
+<PLACEHOLDER_UNION_EKSTRA>
+OPTIONAL {
+?s p:<PLACEHOLDER_PROP_TAHUN> ?iS .
+?iS psv:<PLACEHOLDER_PROP_TAHUN> ?iN .
+?iN wikibase:timeValue ?tM ;
+    wikibase:timePrecision ?tP .
+}
+BIND(SUBSTR(STR(?s), 32) AS ?SQ) .
+BIND(SUBSTR(STR(?p), 32) AS ?PQ) .
+SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
+}`,
 
-  'khusus_negara_all': `SELECT DISTINCT ?SQ ?sLabel ?PQ ?pLabel ?lLabel ?tM ?tP
-  WHERE {
-    <PLACEHOLDER_FILTER_NASIONAL>
-    ?s wdt:P31 ?j .
-    VALUES ?j { <PLACEHOLDER_JENIS> }
-    OPTIONAL {
-      ?p wdt:P31 wd:Q5098 .
-      ?s wdt:<PLACEHOLDER_PROP_LOKASI> ?l .
-      ?l wdt:P131* ?p .
-    }
-    OPTIONAL {
-      ?s p:<PLACEHOLDER_PROP_TAHUN> ?iS .
-      ?iS psv:<PLACEHOLDER_PROP_TAHUN> ?iN .
-      ?iN wikibase:timeValue ?tM ;
-          wikibase:timePrecision ?tP .
-    }
-    BIND(SUBSTR(STR(?s), 32) AS ?SQ) .
-    BIND(SUBSTR(STR(?p), 32) AS ?PQ) .
-    SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
-  }`
+'khusus_negara_all': `SELECT DISTINCT ?SQ ?sLabel ?PQ ?pLabel ?lLabel ?tM ?tP
+WHERE {
+<PLACEHOLDER_FILTER_NASIONAL>
+?s wdt:P31 ?j .
+VALUES ?j { <PLACEHOLDER_JENIS> }
+OPTIONAL {
+?p wdt:P31 wd:Q5098 .
+?s wdt:<PLACEHOLDER_PROP_LOKASI> ?l .
+?l wdt:P131* ?p .
+}
+OPTIONAL {
+?s p:<PLACEHOLDER_PROP_TAHUN> ?iS .
+?iS psv:<PLACEHOLDER_PROP_TAHUN> ?iN .
+?iN wikibase:timeValue ?tM ;
+    wikibase:timePrecision ?tP .
+}
+BIND(SUBSTR(STR(?s), 32) AS ?SQ) .
+BIND(SUBSTR(STR(?p), 32) AS ?PQ) .
+SERVICE wikibase:label { bd:serviceParam wikibase:language "id". }
+}`
 };
 
 const KUMPULAN_KUERI_1 = {
-  'universal': `SELECT DISTINCT ?siteQid ?coord WHERE {
-    VALUES ?site { <PLACEHOLDER_QIDS> }
-    <PLACEHOLDER_KLAUSA_KOORDINAT>
-    ?coordStatement ps:P625 ?coord .
-    FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
-    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
-  }`
+'universal': `SELECT DISTINCT ?siteQid ?coord WHERE {
+VALUES ?site { <PLACEHOLDER_QIDS> }
+<PLACEHOLDER_KLAUSA_KOORDINAT>
+?coordStatement ps:P625 ?coord .
+FILTER NOT EXISTS { ?coordStatement pq:P518 ?x }
+BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+}`
 };
-
 
 const SPARQL_QUERY_3_TEMPLATE =
 `SELECT ?siteQid (SAMPLE(?imgUtama) AS ?image) (SAMPLE(?wikiTitle) AS ?wikipediaUrlTitle) WHERE {
@@ -75,70 +74,63 @@ const SPARQL_QUERY_3_TEMPLATE =
 } GROUP BY ?siteQid`;
 
 function getSparqlQuery4(qid) {
-  return `SELECT ?siteQid ?eventLabel ?pointInTime ?ptPrecision ?startTime ?stPrecision ?endTime ?etPrecision WHERE {
-    VALUES ?site { wd:${qid} }
-    ?site p:P793 ?eventStatement .
-    ?eventStatement ps:P793 ?event .
-    ?event rdfs:label ?eventLabel . 
-    FILTER(LANG(?eventLabel) = "id") .
-    OPTIONAL { 
-      ?eventStatement pqv:P585 ?ptNode .
-      ?ptNode wikibase:timeValue ?pointInTime ;
-              wikibase:timePrecision ?ptPrecision .
-    }
-    OPTIONAL { 
-      ?eventStatement pqv:P580 ?stNode .
-      ?stNode wikibase:timeValue ?startTime ;
-              wikibase:timePrecision ?stPrecision .
-    }
-    OPTIONAL { 
-      ?eventStatement pqv:P582 ?etNode .
-      ?etNode wikibase:timeValue ?endTime ;
-              wikibase:timePrecision ?etPrecision .
-    }
-    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
-  }`;
+return `SELECT ?siteQid ?eventLabel ?pointInTime ?ptPrecision ?startTime ?stPrecision ?endTime ?etPrecision WHERE {
+VALUES ?site { wd:${qid} }
+?site p:P793 ?eventStatement .
+?eventStatement ps:P793 ?event .
+?event rdfs:label ?eventLabel . 
+FILTER(LANG(?eventLabel) = "id") .
+OPTIONAL { 
+?eventStatement pqv:P585 ?ptNode .
+?ptNode wikibase:timeValue ?pointInTime ;
+        wikibase:timePrecision ?ptPrecision .
+}
+OPTIONAL { 
+?eventStatement pqv:P580 ?stNode .
+?stNode wikibase:timeValue ?startTime ;
+        wikibase:timePrecision ?stPrecision .
+}
+OPTIONAL { 
+?eventStatement pqv:P582 ?etNode .
+?etNode wikibase:timeValue ?endTime ;
+        wikibase:timePrecision ?etPrecision .
+}
+BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+}`;
 }
 
 function getSparqlQuery5(qid) {
-  return `SELECT ?siteQid ?vicinityImage ?vicinityCaption ?pastImage ?pastCaption ?interiorImage ?interiorCaption ?commonsCat WHERE {
-    VALUES ?site { wd:${qid} }
-    
-    # Tarik kategori Commons berbarengan dengan Galeri
-    OPTIONAL { ?site wdt:P373 ?commonsCat . }
-    
-    OPTIONAL {
-      ?site p:P18 ?vicinityStatement .
-      ?vicinityStatement ps:P18 ?vicinityImage .
-      FILTER EXISTS { ?vicinityStatement pq:P3831 wd:Q16189205 }
-      OPTIONAL {
-        ?vicinityStatement pq:P2096 ?vicinityCaption .
-        FILTER(LANG(?vicinityCaption) = "id")
-      }
-    }
-    
-    OPTIONAL {
-      ?site p:P18 ?pastImgStmt .
-      ?pastImgStmt ps:P18 ?pastImage .
-      ?pastImgStmt pq:P180 wd:Q192630 .
-      OPTIONAL {
-        ?pastImgStmt pq:P2096 ?pastCaption .
-        FILTER(LANG(?pastCaption) = "id")
-      }
-    }
-
-    # Pemandangan di dalam (interior view / P5775)
-    OPTIONAL {
-      ?site p:P5775 ?interiorStmt .
-      ?interiorStmt ps:P5775 ?interiorImage .
-      OPTIONAL {
-        ?interiorStmt pq:P2096 ?interiorCaption .
-        FILTER(LANG(?interiorCaption) = "id")
-      }
-    }
-    
-    BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
-  } LIMIT 1`;
+return `SELECT ?siteQid ?vicinityImage ?vicinityCaption ?pastImage ?pastCaption ?interiorImage ?interiorCaption ?commonsCat WHERE {
+VALUES ?site { wd:${qid} }
+OPTIONAL { ?site wdt:P373 ?commonsCat . }
+OPTIONAL {
+?site p:P18 ?vicinityStatement .
+?vicinityStatement ps:P18 ?vicinityImage .
+FILTER EXISTS { ?vicinityStatement pq:P3831 wd:Q16189205 }
+OPTIONAL {
+?vicinityStatement pq:P2096 ?vicinityCaption .
+FILTER(LANG(?vicinityCaption) = "id")
+}
+}
+OPTIONAL {
+?site p:P18 ?pastImgStmt .
+?pastImgStmt ps:P18 ?pastImage .
+?pastImgStmt pq:P180 wd:Q192630 .
+OPTIONAL {
+?pastImgStmt pq:P2096 ?pastCaption .
+FILTER(LANG(?pastCaption) = "id")
+}
+}
+OPTIONAL {
+?site p:P5775 ?interiorStmt .
+?interiorStmt ps:P5775 ?interiorImage .
+OPTIONAL {
+?interiorStmt pq:P2096 ?interiorCaption .
+FILTER(LANG(?interiorCaption) = "id")
+}
+}
+BIND (SUBSTR(STR(?site), 32) AS ?siteQid) .
+} LIMIT 1`;
 }
 
 function getSparqlQuery6(qid) {
