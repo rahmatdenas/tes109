@@ -560,7 +560,7 @@ const labelKamus = {
     pendiriList: 'Pendiri', penerbit: 'Penerbit', bahanList: 'Bahan utama',
     caraList: 'Cara pembuatan', penutur: 'Jumlah penutur', tglWafat: 'Wafat',
     pekerjaanList: 'Pekerjaan', pegunungan: 'Bagian dari', korban: 'Korban jiwa',
-    agamaList: 'Agama', bagianDari: 'Bagian dari',
+agamaList: 'Agama', bagianDari: 'Bagian dari', berakhirPada: 'Berhenti terbit',
   pencipta: 'Pencipta', genreList: 'Genre',
     panjang: 'Panjang', koleksiKaryaList: 'Tempat koleksi karya disimpan',
     tinggi: 'Tinggi', lebar: 'Lebar',
@@ -576,6 +576,27 @@ if (record.dynamicProps && Object.keys(record.dynamicProps).length > 0) {
       urlWikibooks = record.dynamicProps.wikibooks;
       delete record.dynamicProps.wikibooks;
     }
+
+      // CEGAT TIPELIST (P31) UNTUK HEADER H2
+    if (record.dynamicProps.tipeList) {
+      // Cari elemen span header berdasarkan QID
+      let headerTextElem = document.getElementById(`header-text-${qid}`);
+      
+      // Jika elemen ditemukan (jendela belum ditutup), timpa teksnya
+      if (headerTextElem && record.dynamicProps.tipeList.trim() !== '') {
+        // Trik agar awal huruf kapital semua (opsional, untuk kerapian)
+        let tipeRapi = record.dynamicProps.tipeList
+          .split(', ')
+          .map(kata => kata.charAt(0).toUpperCase() + kata.slice(1))
+          .join(', ');
+          
+        headerTextElem.textContent = tipeRapi;
+      }
+      // Hapus dari antrean agar tidak diprint di bawah menjadi <p> biasa
+      delete record.dynamicProps.tipeList;
+    }
+
+    // Looping sisanya...
 
     for (let key in record.dynamicProps) {
       let rawValue = record.dynamicProps[key];
@@ -625,7 +646,7 @@ else if (key === 'lamanResmi') {
   const displayUrl = rawValue.replace(/^https?:\/\/(www\.)?/, '');
   formattedValue = `<span class="koordinat-link"><a href="${rawValue}" target="_blank" rel="noopener noreferrer" style="word-break: break-all;">${displayUrl}</a></span>`;
 }
-      else if (key === 'tglTemu' || key === 'tglWafat') {
+else if (key === 'tglTemu' || key === 'tglWafat' || key === 'berakhirPada'){
         let [waktu, presisi] = rawValue.split('|');
         formattedValue = formatWikidataDate(waktu, presisi);
       }
@@ -653,7 +674,7 @@ if (urlWikibooks) {
     if (arsipContainer) {
       let wikibooksHtml = `
         <div style="margin-top:10px;">
-          <h2>Resep & Panduan</h2>
+          <h2 style="margin-bottom: 7px;">Resep & Panduan</h2>
           <p class="wikipedia-link">
             <a href="${urlWikibooks}" target="_blank">
               <img src="img/wikibook_tiny_logo.png" alt="" />
@@ -1005,29 +1026,10 @@ articleHtml = `<div class="article main-text nodata"><p>${currentNamaKlaster} in
   }
   
 let wikiUrlUtama = `https://www.wikidata.org/wiki/${qid}`;
-  let tautanSuntingRingkasan = `<a href="${wikiUrlUtama}" target="_blank" class="sunting-link" title="Sunting data di Wikidata" aria-label="Sunting data di Wikidata"></a>`;
+let tautanSuntingRingkasan = `<a href="${wikiUrlUtama}" target="_blank" class="sunting-link" title="Sunting data di Wikidata" aria-label="Sunting data di Wikidata"></a>`;
 
-  // ==========================================
-  // PERBAIKAN 3: RENDER HEADER KLUSTER DINAMIS
-  // ==========================================
-let isBersejarah = false;
-  if (record.rawTahunBerdiri) {
-    let tahunBangunan = parseInt(record.rawTahunBerdiri.substring(0, 4));
-    if (tahunBangunan <= (new Date().getFullYear() - 50)) isBersejarah = true;
-  }
-
-  // Daftar bangunan/struktur fisik yang masuk akal diberi label "Bersejarah"
-  let klasterBisaBersejarah = [
-    'Masjid', 'Gereja & katedral'
-  ]; 
-  
-  let teksJudul = `Informasi ${currentNamaKlaster}`;
-  if (klasterBisaBersejarah.includes(currentNamaKlaster) && isBersejarah) {
-    teksJudul = `Informasi ${currentNamaKlaster} Bersejarah`;
-  }
-
-  let designationsHtml = `<h2 style="margin-top:10px">${teksJudul} ${tautanSuntingRingkasan}</h2>`;
-  designationsHtml += '<ul class="designations">';
+let designationsHtml = `<h2 style="margin-top:10px"><span id="header-text-${qid}">Informasi</span> ${tautanSuntingRingkasan}</h2>`;
+designationsHtml += '<ul class="designations">';
 
   // Siapkan daftar provinsi & Lokasi
   let arrayProvinsi = Object.values(record.designations).filter(p => p !== 'Tidak dalam Provinsi');
@@ -1116,8 +1118,8 @@ let isBersejarah = false;
 
   // Sisa perakitan HTML ke panel...
   let eventsHtmlPlaceholder = `
-    <div id="events-container-${qid}" class="loading" style="margin-top: 8px; min-height: 24px;">
-      <div class="loader" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div>
+   <div id="events-container-${qid}" class="loading">
+<div class="loader" style="width: 20px; height: 20px; border-width: 2px; margin-top: 3px;"></div>
     </div>`;
 
   designationsHtml +=
@@ -1128,8 +1130,7 @@ let isBersejarah = false;
     '</li>';
       
   designationsHtml += '</ul>';
-
-  let arsipHtml = `<div id="arsip-container-${qid}" class="loading"><div class="loader" style="width: 20px; height: 20px; border-width: 2px; margin: 0;"></div></div>`;
+  let arsipHtml = `<div id="arsip-container-${qid}" class="loading"><div class="loader" style="width: 20px; height: 20px; border-width: 2px; margin-top: 8px;"></div></div>`;
 
   let panelElem = document.createElement('div');
   
@@ -1232,7 +1233,7 @@ function renderHistoricalImagesInPanel(qid) {
   }
 
   if (record.commonsCat) {
-    html += '<h2 style="margin-top:10px;">Galeri lainnya</h2>';
+    html += '<h2 style="margin-top:10px; margin-bottom: 7px;">Galeri lainnya</h2>';
     html += 
       '<p class="wikipedia-link" style="margin-bottom: 0;">' +
         `<a href="https://commons.wikimedia.org/wiki/Category:${encodeURIComponent(record.commonsCat)}" target="_blank">` +
