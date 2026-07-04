@@ -50,16 +50,16 @@ function updateLabel(expanded) {
     if (!handleLabel) return;
     
     var hash = window.location.hash.replace('#', '');
-    var teksTarikNaik = 'Tarik naik untuk lihat Daftar'; // Teks bawaan (default)
+    var teksTarikNaik = 'Tarik naik untuk memilih hasil'; // Teks bawaan (default)
     
     if (hash === '' || hash === 'landing') {
       teksTarikNaik = 'Tarik naik untuk Mulai Menjelajah';
     } else if (hash === 'about') {
-      teksTarikNaik = 'Tarik naik untuk lihat Tentang';
+      teksTarikNaik = 'Tarik naik untuk membaca';
     } else if (hash !== 'hasil') {
       // Jika hash bukan kosong, bukan landing, bukan about, dan BUKAN hasil,
       // maka dipastikan pengguna sedang membuka spesifik butir (Q-ID).
-      teksTarikNaik = 'Tarik naik untuk membaca detail';
+      teksTarikNaik = 'Tarik naik untuk membaca';
     }
     
     handleLabel.textContent = expanded
