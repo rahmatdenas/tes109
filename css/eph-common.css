@@ -27,6 +27,8 @@ body {
   display: inline-block; 
   transform-origin: 50% 50%; 
   backface-visibility: hidden;
+   will-change: transform; 
+   
   border-radius: 50%;
   width: 40px;
   height: 40px;
