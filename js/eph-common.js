@@ -395,10 +395,13 @@ async function fetchWdqsRawWithRetry(query, maxRetry = 3) {
       // +++ PERBAIKAN UX: LAPORKAN SEBELUM MENCOBA ULANG +++
       // =========================================================
       if (attempt > 1) {
-        let progressText = document.querySelector('#index-list p');
-        if (progressText) {
-          progressText.innerHTML = `Sedang melakukan percobaan ulang (${attempt}/${maxRetry})...`;
-        }
+let progressText = document.querySelector('#index-list p');
+
+// Jika ini adalah putaran halaman kedua, ketiga, dan seterusnya
+if (progressText && halaman > 1) {
+  // Tambahkan nomor halaman agar pengguna tahu prosesnya terus berjalan
+  progressText.innerHTML = `Melanjutkan penarikan data halaman ${halaman}...`;
+}
       }
 
       return await fetchWdqsRaw(query);
