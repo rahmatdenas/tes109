@@ -26,6 +26,8 @@ var PrimaryDataIsLoaded   = false;
 
 var isAppInitialLoad      = true; // Tambahkan ini!
 var isFetching            = false; // Menandai apakah satpam sedang mencari data
+var currentSearchToken    = 0;     // <--- Letakkan di sini (berdekatan dengan isFetching)
+var globalFetchController = new AbortController(); // <--- (Jika Anda jadi memasang AbortController)
 var activeXhrs            = [];
 var currentActiveShapeLayer = null;
 
@@ -72,6 +74,7 @@ function setupLandingForm() {
     
     // === MULAI LOADING ===
     isFetching = true; 
+    currentSearchToken = Date.now();
     
     // Ubah URL ke #hasil agar masuk ke daftar
     window.location.hash = 'hasil';
@@ -81,8 +84,10 @@ function setupLandingForm() {
 }
 
 function resetApp() {
+  currentSearchToken = 0;
+  
   // 1. Bunuh Koneksi yang Sedang Berjalan
-if (activeXhrs.length > 0) {
+  if (activeXhrs.length > 0) {
     let xhrToAbort = [...activeXhrs]; 
     activeXhrs = []; 
     xhrToAbort.forEach(xhr => {
@@ -90,6 +95,15 @@ if (activeXhrs.length > 0) {
       xhr.abort();
     });
   }
+
+  // =========================================================
+  // +++ TAMBAHKAN DI SINI: BUNUH FETCH API (GAMBAR & ARTIKEL)
+  // =========================================================
+  if (typeof globalFetchController !== 'undefined') {
+    globalFetchController.abort(); // Tarik pelatuk untuk mematikan fetch background
+    globalFetchController = new AbortController(); // Beri nyawa baru untuk pencarian berikutnya
+  }
+  // =========================================================
 
   let brandingDesc = document.getElementById('branding-desc');
   if (brandingDesc) {
@@ -126,14 +140,14 @@ if (activeXhrs.length > 0) {
     selectRegion.value = 'all';
   }
 
-// B. Kembalikan Menu Usia ke default
+  // B. Kembalikan Menu Usia ke default
   let selectKombinasi = document.getElementById('filter-sort-kombinasi');
   if (selectKombinasi) {
     selectKombinasi.value = 'default'; // Cukup reset nilainya saja di sini
   }
   
   // C. Bersihkan Kotak Pencarian dan Angka Hasil
-let searchInput = document.getElementById('search-input');
+  let searchInput = document.getElementById('search-input');
   if (searchInput) {
     searchInput.value = '';
     searchInput.placeholder = 'Belum ada hasil...';
@@ -612,8 +626,10 @@ function generateFigure(filename, title = "Situs", classNames = []) {
     };
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
 
-    // Eksekusi Fetch API
-    fetch(url)
+    // =========================================================
+    // 1. TAMBAHKAN SIGNAL KE DALAM FETCH
+    // =========================================================
+    fetch(url, { signal: globalFetchController.signal })
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
@@ -661,6 +677,15 @@ function generateFigure(filename, title = "Situs", classNames = []) {
         }
       })
       .catch(error => {
+        // =========================================================
+        // 2. CEGAT ERROR JIKA DIBATALKAN OLEH RESET APP
+        // =========================================================
+        if (error.name === 'AbortError') {
+          // Jika sengaja dibunuh, diamkan saja. Jangan ubah HTML atau cetak error.
+          return;
+        }
+
+        // Jika error murni (jaringan putus dsb), jalankan kode asli Anda
         console.error('Gagal memuat metadata gambar:', error);
         let targetCaption = document.getElementById(uniqueId);
         if (targetCaption) targetCaption.innerHTML = 'Data gagal dimuat.';
