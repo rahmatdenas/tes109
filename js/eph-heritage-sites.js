@@ -971,10 +971,19 @@ function generateFilterSelect() {
       });
     });
 
-    if (searchInput) {
+if (searchInput) {
       searchInput.addEventListener('input', function() {
         currentSearchQuery = this.value.toLowerCase();
-        applyIntersectionFilter(); 
+        
+        // Hapus antrean sebelumnya jika pengguna masih asyik mengetik
+        if (searchDebounceToken) {
+          clearTimeout(searchDebounceToken);
+        }
+        
+        // Tunda eksekusi filter berat selama 300 milidetik
+        searchDebounceToken = setTimeout(() => {
+          applyIntersectionFilter(); 
+        }, 300);
       });
     }
 
