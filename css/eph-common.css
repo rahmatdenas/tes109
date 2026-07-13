@@ -127,6 +127,7 @@ nav li a {
 }
 
 nav li a:hover,
+nav li a:active,
 nav li.selected a, nav li a.selected,
 nav li.active a, nav li a.active {
   background: transparent;
