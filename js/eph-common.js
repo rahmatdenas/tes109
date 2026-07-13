@@ -450,56 +450,70 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
   let halaman = 1;
   let totalDataTerkumpul = 0; 
 
-  while (true) {
-    let pagedQuery = queryTemplate.replace(
-      '<PLACEHOLDER_LIMIT_OFFSET>',
-      `LIMIT ${chunkSize} OFFSET ${offset}`
-    );
+  try {
+    while (true) {
+      let pagedQuery = queryTemplate.replace(
+        '<PLACEHOLDER_LIMIT_OFFSET>',
+        `LIMIT ${chunkSize} OFFSET ${offset}`
+      );
 
-    let progressText = document.querySelector('#index-list p');
-    if (progressText && progressText.innerHTML.includes('gagal')) {
-      progressText.innerHTML = `Melanjutkan penarikan data...`;
+      let progressText = document.querySelector('#index-list p');
+      if (progressText && progressText.innerHTML.includes('gagal')) {
+        progressText.innerHTML = `Melanjutkan penarikan data...`;
+      }
+
+      // Jika jaringan dibatalkan (abort), fetchWdqsRawWithRetry akan melempar error
+      // Error tersebut akan langsung ditangkap oleh blok catch di bawah
+      let bindings = await fetchWdqsRawWithRetry(pagedQuery);
+      
+      // =========================================================
+      // +++ JINAKKAN BOM WAKTU (Karena data sudah mulai masuk) +++
+      // =========================================================
+      if (halaman === 1 && loadingTimeoutToken) {
+        clearTimeout(loadingTimeoutToken);
+        loadingTimeoutToken = null;
+      }
+      
+      bindings.forEach(processEachResult);
+
+      let kombinasiUnik = new Set(
+        bindings.map(b => `${b.SQ.value}|${b.PQ ? b.PQ.value : ''}|${b.LQ ? b.LQ.value : ''}`)
+      ).size;
+
+      // Tambahkan data halaman ini ke total keseluruhan
+      totalDataTerkumpul += kombinasiUnik;
+      
+      console.log(`[Halaman ${halaman}] Kombinasi (s,p,l) unik:`, kombinasiUnik);
+
+      // Cek apakah ini halaman terakhir atau bukan untuk menentukan teks yang pas
+      if (kombinasiUnik < chunkSize) {
+         if (progressText) {
+           progressText.textContent = `Total ${totalDataTerkumpul} data ditarik. Data segera ditampilkan...`;
+         }
+         break; // Loop berhenti secara normal
+      } else {
+         if (progressText) {
+           progressText.textContent = `Selesai menarik ${totalDataTerkumpul} data. Penarikan data masih berlangsung...`;
+         }
+      }
+
+      offset += chunkSize;
+      halaman++;
     }
-
-    let bindings = await fetchWdqsRawWithRetry(pagedQuery);
-    
-    // =========================================================
-    // +++ JINAKKAN BOM WAKTU (Karena data sudah mulai masuk) +++
-    // =========================================================
-    if (halaman === 1 && loadingTimeoutToken) {
-      clearTimeout(loadingTimeoutToken);
-      loadingTimeoutToken = null;
-    }
-    
-    bindings.forEach(processEachResult);
-
-    let kombinasiUnik = new Set(
-      bindings.map(b => `${b.SQ.value}|${b.PQ ? b.PQ.value : ''}|${b.LQ ? b.LQ.value : ''}`)
-    ).size;
-
-    // Tambahkan data halaman ini ke total keseluruhan
-    totalDataTerkumpul += kombinasiUnik;
-    
-    console.log(`[Halaman ${halaman}] Kombinasi (s,p,l) unik:`, kombinasiUnik);
-
-    // Cek apakah ini halaman terakhir atau bukan untuk menentukan teks yang pas
-    if (kombinasiUnik < chunkSize) {
-       // Loop akan berhenti, ubah pesan ke status final
-       if (progressText) {
-         progressText.textContent = `Total ${totalDataTerkumpul} data ditarik. Data segera ditampilkan...`;
-       }
-       break; 
+  } catch (error) {
+    // SABUK PENGAMAN: Tangkap ledakan error di sini
+    if (error === 'ABORTED') {
+      console.log('Penarikan data dihentikan secara aman oleh pengguna.');
+      // Kita return agar langsung keluar dari fungsi tanpa menjalankan postprocessCallback
+      return; 
     } else {
-       // Masih ada halaman berikutnya
-       if (progressText) {
-         progressText.textContent = `Selesai menarik ${totalDataTerkumpul} data. Penarikan data masih berlangsung...`;
-       }
+      // Jika error lain (misal jaringan mati total), lempar lagi ke sistem agar diketahui
+      console.error('Proses paginasi gagal total:', error);
+      throw error;
     }
-
-    offset += chunkSize;
-    halaman++;
   }
 
+  // Baris ini hanya dieksekusi jika loop while break secara normal (bukan karena error/dibatalkan)
   if (postprocessCallback) postprocessCallback();
 }
 
