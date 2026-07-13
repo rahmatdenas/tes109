@@ -149,7 +149,11 @@
   #details,
   #about,
   #kontrib {
-    padding: 16px;
+padding-top: 16px;
+padding-left: 16px;
+padding-right: 16px;
+padding-bottom: 48px;
+     
   }
 
   #details h1 {
