@@ -669,7 +669,7 @@ function processHashChange() {
               <h3 style="margin-bottom: 10px; margin-top:0; color: #333;">Data Belum Ditarik</h3>
               <p style="color: #666; font-size:14px; margin-bottom: 25px;">
               Anda belum melakukan pencarian. Silakan kembali ke halaman Beranda untuk memilih entitas yang ingin dieksplorasi.</p>
-              <a href="#" style="background-color: #882222; color: #fff; 
+              <a href="#" style="background-color: #7b0d0c; color: #fff; 
               padding: 10px 20px; text-decoration: none; border-radius: 5px; 
               font-weight: 600; display: inline-block;">Pilih Data</a>
             </div>
