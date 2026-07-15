@@ -471,9 +471,8 @@ padding-bottom: 68px;
 }
 
 #details .main-wikidata-link {
-  display: block;
-  float: right;
-  margin: -3px 0 0 0;
+    display: block;
+    margin-bottom: -10px;
 }
 
 #details h1 {
