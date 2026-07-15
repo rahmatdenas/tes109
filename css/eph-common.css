@@ -556,7 +556,7 @@ height: 16px;
 
 #details figure > a {
   display: block;
-      border: 1px solid #8b8b8b;
+      border: 1px solid #ccc;
   text-decoration: none;
 }
 
