@@ -1321,7 +1321,7 @@ if (spesifik === 'Wilayah Lainnya/Tidak Spesifik') spesifik = null;
   // ==========================================
   // LOGIKA 'TERLETAK' (T) & 'DIDIRIKAN' (D)
   // ==========================================
-  let prefixLokasi = 'Terletak di'; 
+  let prefixLokasi = 'Letak'; 
   let showTahun = true; 
   let prefixTahun = 'Didirikan';
 
@@ -1348,7 +1348,7 @@ if (spesifik === 'Wilayah Lainnya/Tidak Spesifik') spesifik = null;
     prefixLokasi = 'Pusat kejadian/terdampak';
     prefixTahun = 'Pada';
   }   else if (['Situs arkeologi'].includes(currentNamaKlaster)) {
-    prefixLokasi = 'Terletak di';
+    prefixLokasi = 'Letak';
     prefixTahun = 'Era/periode';
   } else if (['Prasasti', 'Artefak'].includes(currentNamaKlaster)) {
     prefixLokasi = 'Lokasi sekarang';
@@ -1365,7 +1365,7 @@ if (spesifik === 'Wilayah Lainnya/Tidak Spesifik') spesifik = null;
     } else {
       // Untuk sisanya seperti RTH, Kebun Binatang, Gunung, Air Terjun, dll.
       // Tetap menggunakan default prefixLokasi = 'Terletak di'
-      prefixLokasi = 'Terletak di';
+      prefixLokasi = 'Letak';
     }
   }
 
