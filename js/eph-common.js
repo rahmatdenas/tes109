@@ -509,9 +509,7 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
         progressText.innerHTML = `Melanjutkan penarikan data...`;
       }
 
-      // Jika jaringan dibatalkan (abort), fetchWdqsRawWithRetry akan melempar error
-      // Error tersebut akan langsung ditangkap oleh blok catch di bawah
-      let bindings = await fetchWdqsRawWithRetry(pagedQuery);
+      let bindings = await fetchWdqsRawWithRetry(pagedQuery, 3, ` (offset ${offset})`);
       
       // =========================================================
       // +++ JINAKKAN BOM WAKTU (Karena data sudah mulai masuk) +++
