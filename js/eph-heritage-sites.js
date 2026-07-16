@@ -515,24 +515,14 @@ async function populateImageAndWikipediaData() {
   let btnImg = document.getElementById('btn-image') || document.querySelector('[data-filter="image"]');
   let btnArt = document.getElementById('btn-article') || document.querySelector('[data-filter="article"]');
   let tiketPencarianIni = currentSearchToken;
+  
+  let totalData = daftarQid.length;
 
-for (let i = 0; i < kelompokCicilan.length; i++) {
-    // Berhenti jika pengguna klik tombol "Mulai" lagi (pencarian baru)
-    if (currentSearchToken !== tiketPencarianIni) break; 
-
-    // UBAH TEKS MENJADI INDIKATOR PROGRES (Tanpa mengunci tombol)
-    let persentase = Math.round(((i + 1) / kelompokCicilan.length) * 100);
-    
-    if (btnImg && !btnImg.classList.contains('active')) {
-      btnImg.textContent = `Gambar (${persentase}%)`;
-    }
-    if (btnArt && !btnArt.classList.contains('active')) {
-      btnArt.textContent = `Artikel (${persentase}%)`;
-    }
-
-    let cicilan = kelompokCicilan[i];
+  // =========================================================
+  // FUNGSI PEMBANTU: Menarik 1 kloter (1.000 data) dengan aman
+  // =========================================================
+  const tarikSatuKloter = async (cicilan) => {
     let kueriFinal = SPARQL_QUERY_3_TEMPLATE.replace('<PLACEHOLDER_QIDS>', cicilan.join(' '));
-
     try {
       await queryWdqsThenProcess(kueriFinal, function(result) {
         let record = Records[result.siteQid.value];      
@@ -541,38 +531,93 @@ for (let i = 0; i < kelompokCicilan.length; i++) {
         if ('wikipediaUrlTitle' in result) record.articleTitle = decodeURIComponent(result.wikipediaUrlTitle.value);
       });
     } catch (error) {
+      // Jika dibatalkan user, lempar errornya agar proses utama berhenti
       if (error === 'ABORTED') throw error;
+      // Jika hanya gagal jaringan/timeout Wikidata, abaikan agar kloter lain tetap jalan!
+      console.warn("1 kloter gambar/artikel gagal ditarik, sistem melanjutkan kloter lainnya...", error);
     }
+  };
 
-    if (currentSearchToken !== tiketPencarianIni) break;
+  try {
+    if (totalData <= 20000) {
+      // ========================================================
+      // SKENARIO A: Total ≤ 20.000 (FULL PARALEL)
+      // Tembak semua kloter serentak dalam 1 waktu!
+      // ========================================================
+      let chunksCompleted = 0;
+      
+      let daftarJanji = kelompokCicilan.map(cicilan => {
+        return tarikSatuKloter(cicilan).then(() => {
+          if (currentSearchToken !== tiketPencarianIni) throw 'ABORTED';
+          
+          // Update Persentase
+          chunksCompleted++;
+          let persentase = Math.round((chunksCompleted / kelompokCicilan.length) * 100);
+          if (btnImg && !btnImg.classList.contains('active')) btnImg.textContent = `Gambar (${persentase}%)`;
+          if (btnArt && !btnArt.classList.contains('active')) btnArt.textContent = `Artikel (${persentase}%)`;
+          
+          // Update Peta & Daftar secara langsung
+          Object.values(Records).forEach(r => r.panelElem = undefined);
+          if (activeFeatures.has('image') || activeFeatures.has('article')) {
+            applyIntersectionFilter(true); 
+          }
+        });
+      });
 
-    // Hapus cache panel agar jika user mengklik bangunan, panel di-render ulang dengan gambar terbaru
-    Object.values(Records).forEach(r => r.panelElem = undefined);
+      // Tunggu SEMUA selesai
+      await Promise.all(daftarJanji);
 
-    // KUNCI PENTING: Hanya render ulang daftar & peta JIKA pengguna sedang menyalakan filter.
-    if (activeFeatures.has('image') || activeFeatures.has('article')) {
-      applyIntersectionFilter(true); 
+    } else {
+      // ========================================================
+      // SKENARIO B: Total > 20.000 (SEKUENSIAL 3.000 PARALEL)
+      // Cicil 3 kloter sekaligus, tunggu beres, lalu 3 kloter berikutnya
+      // ========================================================
+      let batchSize = 3; 
+      let chunksCompleted = 0;
+
+      for (let i = 0; i < kelompokCicilan.length; i += batchSize) {
+        if (currentSearchToken !== tiketPencarianIni) break; 
+
+        let potonganBatch = kelompokCicilan.slice(i, i + batchSize);
+        
+        // Eksekusi maksimal 3 peluru bersamaan
+        let daftarJanji = potonganBatch.map(cicilan => tarikSatuKloter(cicilan));
+        
+        // Kunci di sini: Sistem AKAN BERHENTI MENUNGGU 3 kloter ini selesai
+        await Promise.all(daftarJanji);
+
+        if (currentSearchToken !== tiketPencarianIni) break;
+
+        // Update Persentase
+        chunksCompleted += potonganBatch.length;
+        let persentase = Math.round((chunksCompleted / kelompokCicilan.length) * 100);
+        
+        if (btnImg && !btnImg.classList.contains('active')) btnImg.textContent = `Gambar (${persentase}%)`;
+        if (btnArt && !btnArt.classList.contains('active')) btnArt.textContent = `Artikel (${persentase}%)`;
+
+        // Update Peta & Daftar HANYA setelah 1 batch (3 kloter) selesai
+        Object.values(Records).forEach(r => r.panelElem = undefined);
+        if (activeFeatures.has('image') || activeFeatures.has('article')) {
+          applyIntersectionFilter(true); 
+        }
+      }
+    }
+  } catch (error) {
+    if (error === 'ABORTED') {
+      console.log('Penarikan gambar/artikel dihentikan karena pencarian baru.');
+    } else {
+      console.error("Proses penarikan gambar terhenti:", error);
     }
   }
 
-  // SETELAH SEMUA KLOTER SELESAI: Kembalikan teks ke aslinya
-  if (btnImg && !btnImg.classList.contains('active')) {
-    btnImg.textContent = 'Memiliki Gambar';
-  }
-  if (btnArt && !btnArt.classList.contains('active')) {
-    btnArt.textContent = 'Memiliki Artikel';
-  }
+  // JARING PENGAMAN: Pastikan user tidak keburu klik menu lain sebelum mengembalikan teks
+  if (currentSearchToken !== tiketPencarianIni) return;
 
-    // Hapus cache panel agar jika user mengklik bangunan, panel di-render ulang dengan gambar terbaru
-    Object.values(Records).forEach(r => r.panelElem = undefined);
-
-    // KUNCI PENTING: Hanya render ulang daftar & peta JIKA pengguna sedang menyalakan filter.
-    // Jika tidak dinyalakan, jangan di-render ulang agar HP tidak lag karena DOM thrashing.
-    if (activeFeatures.has('image') || activeFeatures.has('article')) {
-      // preventZoom = true (agar kamera peta tidak tiba-tiba me-reset posisinya saat user asyik menggeser)
-      applyIntersectionFilter(true); 
-    }
-  }
+  // ========================================================
+  // KEMBALIKAN TEKS TOMBOL KE ASLINYA SETELAH 100% SELESAI
+  // ========================================================
+  if (btnImg && !btnImg.classList.contains('active')) btnImg.textContent = 'Memiliki Gambar';
+  if (btnArt && !btnArt.classList.contains('active')) btnArt.textContent = 'Memiliki Artikel';
 }
 
 function populateImportantEventsData(qid) {
