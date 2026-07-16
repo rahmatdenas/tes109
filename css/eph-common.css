@@ -956,7 +956,6 @@ position: absolute;
   z-index: 10001;
   padding: 10px; /* Jarak antara batas border dengan gambar */
   background: #fff;
-  border: 2px solid #ccc; /* Border abu-abu */
   border-radius: 4px;
   max-width: 90vw; /* Sisakan ruang kiri-kanan di layar HP */
   max-height: 90vh; /* Sisakan ruang atas-bawah */
