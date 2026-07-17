@@ -176,6 +176,15 @@ document.addEventListener('click', function(e) {
     }
   });
   processHashChange();
+  setTimeout(() => {
+    let preloader = document.getElementById('eph-preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      preloader.style.visibility = 'hidden';
+      // Hapus elemen sepenuhnya dari DOM setelah animasinya selesai (400ms) agar tidak membebani memori
+      setTimeout(() => preloader.remove(), 400); 
+    }
+  }, 150);
 }
 
 
