@@ -76,7 +76,23 @@ window.konfirmasiBerhenti = function() {
   tampilkanDialog("Anda yakin ingin mencukupkan penarikan? Data yang tertangkap sejauh ini akan segera disusun dan dirender ke peta.", "confirm", "Cukupkan Pencarian")
     .then(yakin => {
       if (yakin) {
-        window.hentikanPencarian = true; // Tarik rem darurat!
+        window.hentikanPencarian = true; 
+        
+        // 1. Ubah teks detik itu juga agar UI tidak terasa beku
+        let progressText = document.querySelector('#index-list p');
+        if (progressText) {
+           progressText.innerHTML = `<span style="color:#7b0d0c; font-weight:bold;">Memutus koneksi... Menyiapkan data yang terselamatkan.</span><br><br>Mohon tunggu sebentar, sistem sedang membangun koordinat peta...`;
+        }
+
+        // 2. BUNUH KONEKSI YANG SEDANG BERJALAN SECARA PAKSA!
+        if (typeof activeXhrs !== 'undefined' && activeXhrs.length > 0) {
+          let xhrToAbort = [...activeXhrs]; 
+          activeXhrs = []; 
+          xhrToAbort.forEach(xhr => {
+            xhr.isAbortedManually = true; 
+            xhr.abort(); // Tembak mati request yang sedang nyangkut
+          });
+        }
       }
     });
 };
@@ -550,18 +566,13 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
   let totalDataTerkumpul = 0; 
   try {
     while (true) {
-      let pagedQuery = queryTemplate.replace(
-        '<PLACEHOLDER_LIMIT_OFFSET>',
-        `LIMIT ${chunkSize} OFFSET ${offset}`
-      );
+      if (window.hentikanPencarian) break;
 
-      // Jika jaringan dibatalkan (abort), fetchWdqsRawWithRetry akan melempar error
-      // Error tersebut akan langsung ditangkap oleh blok catch di bawah
+      let pagedQuery = queryTemplate.replace('<PLACEHOLDER_LIMIT_OFFSET>', `LIMIT ${chunkSize} OFFSET ${offset}`);
       let bindings = await fetchWdqsRawWithRetry(pagedQuery, 3, ` (data ${offset}-${offset + chunkSize})`);
       
-      // =========================================================
-      // +++ JINAKKAN BOM WAKTU (Karena data sudah mulai masuk) +++
-      // =========================================================
+      if (window.hentikanPencarian) break;
+      
       if (halaman === 1 && loadingTimeoutToken) {
         clearTimeout(loadingTimeoutToken);
         loadingTimeoutToken = null;
@@ -571,18 +582,16 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
       let kombinasiUnik = new Set(
         bindings.map(b => `${b.SQ.value}|${b.PQ ? b.PQ.value : ''}|${b.LQ ? b.LQ.value : ''}`)
       ).size;
-      // Tambahkan data halaman ini ke total keseluruhan
-      totalDataTerkumpul += kombinasiUnik;
       
+      totalDataTerkumpul += kombinasiUnik;
       console.log(`[Halaman ${halaman}] Kombinasi (s,p,l) unik:`, kombinasiUnik);
-      // Cek apakah ini halaman terakhir atau bukan untuk menentukan teks yang pas
-// 3. Tentukan apakah lanjut atau berhenti normal
+      
       if (kombinasiUnik < chunkSize) {
-         break; // Berhenti karena data sudah habis
+         break; 
       } else {
          let progressText = document.querySelector('#index-list p');
-         if (progressText) {
-           // Sisipkan HTML tautan interaktif yang memanggil window.konfirmasiBerhenti()
+         // Jangan ubah teks jika rem darurat sudah ditarik
+         if (progressText && !window.hentikanPencarian) {
            progressText.innerHTML = `Selesai menarik <b>${totalDataTerkumpul.toLocaleString('id-ID')}</b> data. Penarikan data masih berlanjut... <br><br>
            <a href="#" onclick="window.konfirmasiBerhenti(); return false;" style="color:#7b0d0c; font-weight:bold; font-size: 13px; text-decoration:underline; display:inline-block; margin-top:5px;">Klik di sini jika Anda ingin mencukupkan pencarian</a>`;
          }
@@ -590,16 +599,23 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
       offset += chunkSize;
       halaman++;
     }
-} catch (error) {
+  } catch (error) {
     if (error === 'ABORTED') {
-      console.log('Penarikan data dihentikan secara aman oleh sistem.');
-      return; 
+      // +++ KUNCI PERBAIKAN: Jinakkan efek abort khusus untuk rem darurat +++
+      if (window.hentikanPencarian) {
+         console.log('Penarikan dipotong paksa oleh pengguna. Melanjutkan ke render peta...');
+         // JANGAN 'return;' di sini, biarkan kode meluncur ke bawah!
+      } else {
+         console.log('Penarikan dibatalkan sepenuhnya karena reset/URL berubah.');
+         return; // Jika murni batal karena kembali ke beranda, baru kita hentikan total
+      }
     } else {
       console.error('Proses paginasi gagal total:', error);
       throw error;
     }
   }
-  // Baris ini hanya dieksekusi jika loop while break secara normal (bukan karena error/dibatalkan)
+  
+  // Baris ini akan tetap dieksekusi jika loop normal, ATAU jika rem ditarik!
   if (postprocessCallback) postprocessCallback();
 }
 
