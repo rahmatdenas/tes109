@@ -36,6 +36,51 @@ var isRevertingHash = false;
 var loadingTimeoutToken = null;
 var searchDebounceToken = null;
 
+// =========================================================
+// FUNGSI DIALOG KUSTOM (Pengganti alert & confirm)
+// =========================================================
+function tampilkanDialog(pesan, tipe = 'alert', judul = 'Perhatian') {
+  return new Promise((resolve) => {
+    let overlay = document.getElementById('eph-dialog-overlay');
+    let titleElem = document.getElementById('eph-dialog-title');
+    let msgElem = document.getElementById('eph-dialog-msg');
+    let btnYes = document.getElementById('eph-dialog-btn-yes');
+    let btnNo = document.getElementById('eph-dialog-btn-no');
+
+    titleElem.textContent = judul;
+    msgElem.innerHTML = pesan; // Menggunakan innerHTML agar mendukung tag <br> atau <b>
+
+    if (tipe === 'confirm') {
+      btnNo.style.display = 'inline-block';
+      btnYes.textContent = 'Ya';
+    } else {
+      btnNo.style.display = 'none'; // Sembunyikan tombol batal untuk mode Alert
+      btnYes.textContent = 'OK';
+    }
+
+    overlay.classList.add('aktif');
+
+    btnYes.onclick = function() {
+      overlay.classList.remove('aktif');
+      resolve(true);
+    };
+
+    btnNo.onclick = function() {
+      overlay.classList.remove('aktif');
+      resolve(false);
+    };
+  });
+}
+
+window.konfirmasiBerhenti = function() {
+  tampilkanDialog("Anda yakin ingin mencukupkan penarikan? Data yang tertangkap sejauh ini akan segera disusun dan dirender ke peta.", "confirm", "Cukupkan Pencarian")
+    .then(yakin => {
+      if (yakin) {
+        window.hentikanPencarian = true; // Tarik rem darurat!
+      }
+    });
+};
+
 const ikonTetesanAir = L.divIcon({
   className: 'ikon-marker-ringan',
   html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -13 412 538" width="30" height="40" style="overflow: visible;">
@@ -175,6 +220,7 @@ loadingTimeoutToken = setTimeout(() => {
 function resetApp() {
   
   currentSearchToken = 0;
+  window.hentikanPencarian = false;
 
   if (loadingTimeoutToken) {
     clearTimeout(loadingTimeoutToken);
@@ -530,25 +576,25 @@ async function queryWdqsPaginated(queryTemplate, processEachResult, postprocessC
       
       console.log(`[Halaman ${halaman}] Kombinasi (s,p,l) unik:`, kombinasiUnik);
       // Cek apakah ini halaman terakhir atau bukan untuk menentukan teks yang pas
+// 3. Tentukan apakah lanjut atau berhenti normal
       if (kombinasiUnik < chunkSize) {
-         break; // Loop berhenti secara normal, tanpa update teks
+         break; // Berhenti karena data sudah habis
       } else {
          let progressText = document.querySelector('#index-list p');
          if (progressText) {
-           progressText.textContent = `Selesai menarik ${totalDataTerkumpul} data. Penarikan data masih berlangsung...`;
+           // Sisipkan HTML tautan interaktif yang memanggil window.konfirmasiBerhenti()
+           progressText.innerHTML = `Selesai menarik <b>${totalDataTerkumpul.toLocaleString('id-ID')}</b> data. Penarikan data masih berlanjut... <br><br>
+           <a href="#" onclick="window.konfirmasiBerhenti(); return false;" style="color:#7b0d0c; font-weight:bold; font-size: 13px; text-decoration:underline; display:inline-block; margin-top:5px;">Klik di sini jika Anda ingin mencukupkan pencarian</a>`;
          }
       }
       offset += chunkSize;
       halaman++;
     }
-  } catch (error) {
-    // SABUK PENGAMAN: Tangkap ledakan error di sini
+} catch (error) {
     if (error === 'ABORTED') {
-      console.log('Penarikan data dihentikan secara aman oleh pengguna.');
-      // Kita return agar langsung keluar dari fungsi tanpa menjalankan postprocessCallback
+      console.log('Penarikan data dihentikan secara aman oleh sistem.');
       return; 
     } else {
-      // Jika error lain (misal jaringan mati total), lempar lagi ke sistem agar diketahui
       console.error('Proses paginasi gagal total:', error);
       throw error;
     }
@@ -591,32 +637,29 @@ if (logoBranding) {
   // 2. KOTAK KONFIRMASI (Bekerja mulus di Safari & Chrome)
   // =================================================================
   
-  // Jika pengguna mencoba ke Beranda (fragment kosong) TAPI ada data yang sudah/sedang ditarik
+ // Jika pengguna mencoba ke Beranda (fragment kosong) TAPI ada data yang sudah/sedang ditarik
   if (fragment === '' && (PrimaryDataIsLoaded || isFetching)) {
     
-    // Jeda 50ms memberikan waktu bagi browser (terutama Safari) untuk menyelesaikan 
-    // antrean animasi UI sebelum dibekukan oleh kotak dialog confirm()
-    setTimeout(() => {
-      let yakin = confirm("Kembali ke beranda dapat membersihkan data yang sedang/sudah dimuat dan Anda harus menarik data lagi. Anda yakin?");
-      
-      if (yakin) {
-        // JIKA YA: Bersihkan semua dan kembali ke Beranda murni
-        lastValidHash = 'landing';
-        history.replaceState(null, null, window.location.pathname);
-        resetApp();
-        document.title = 'Mulai – ' + BASE_TITLE;
-        displayPanelContent('landing');
-        updateNavigationUI(''); 
-      } else {
-        // JIKA BATAL: Kembalikan URL ke posisi sebelumnya secara diam-diam
-        isRevertingHash = true;
-        window.location.hash = lastValidHash === 'landing' ? '' : lastValidHash;
-      }
-    }, 50);
+    // Panggil dialog kustom kita
+    tampilkanDialog("Kembali ke beranda akan menghapus data yang sedang/sudah dimuat. Anda yakin ingin mereset pencarian?", "confirm", "Kembali ke Beranda")
+      .then(yakin => {
+        if (yakin) {
+          // JIKA YA: Bersihkan semua dan kembali ke Beranda murni
+          lastValidHash = 'landing';
+          history.replaceState(null, null, window.location.pathname);
+          resetApp();
+          document.title = 'Mulai – ' + BASE_TITLE;
+          displayPanelContent('landing');
+          updateNavigationUI(''); 
+        } else {
+          // JIKA BATAL: Kembalikan URL ke posisi sebelumnya secara diam-diam
+          isRevertingHash = true;
+          window.location.hash = lastValidHash === 'landing' ? '' : lastValidHash;
+        }
+      });
     
-    return; // Hentikan eksekusi fungsi di sini! Jangan teruskan ke bawah.
+    return; // Tetap hentikan eksekusi sinkron di sini
   }
-
   // =================================================================
   // Jika tidak ada halangan atau bukan menuju Beranda, jalankan normal
   // =================================================================
