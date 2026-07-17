@@ -48,26 +48,38 @@ function tampilkanDialog(pesan, tipe = 'alert', judul = 'Perhatian') {
     let btnNo = document.getElementById('eph-dialog-btn-no');
 
     titleElem.textContent = judul;
-    msgElem.innerHTML = pesan; // Menggunakan innerHTML agar mendukung tag <br> atau <b>
+    msgElem.innerHTML = pesan; 
 
     if (tipe === 'confirm') {
       btnNo.style.display = 'inline-block';
       btnYes.textContent = 'Ya';
     } else {
-      btnNo.style.display = 'none'; // Sembunyikan tombol batal untuk mode Alert
-      btnYes.textContent = 'OK';
+      btnNo.style.display = 'none'; 
+      btnYes.textContent = 'Tutup'; // <--- Teks diubah menjadi "Tutup"
     }
 
     overlay.classList.add('aktif');
 
-    btnYes.onclick = function() {
+    // Fungsi pembantu agar bersih dari bentrok memori
+    const tutupDanBersihkan = (nilai) => {
       overlay.classList.remove('aktif');
-      resolve(true);
+      btnYes.onclick = null;
+      btnNo.onclick = null;
+      overlay.onclick = null;
+      resolve(nilai);
     };
 
-    btnNo.onclick = function() {
-      overlay.classList.remove('aktif');
-      resolve(false);
+    // Tutup saat tombol ditekan
+    btnYes.onclick = () => tutupDanBersihkan(true);
+    btnNo.onclick = () => tutupDanBersihkan(false);
+
+    // +++ TAMBAHAN UX SELULER +++
+    // Jika area hitam (overlay) di luar kotak diklik, otomatis tutup!
+    // (Hanya berlaku untuk mode "alert". Untuk "confirm", user harus pilih Ya/Batal).
+    overlay.onclick = function(e) {
+      if (e.target === overlay && tipe === 'alert') {
+        tutupDanBersihkan(true);
+      }
     };
   });
 }
