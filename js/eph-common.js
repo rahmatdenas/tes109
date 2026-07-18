@@ -623,14 +623,10 @@ if (kombinasiUnik < chunkSize) {
          let progressText = document.querySelector('#index-list p');
          
          if (progressText && !window.hentikanPencarian) {
-progressText.innerHTML = `Selesai menarik <b>${totalDataTerkumpul.toLocaleString('id-ID')}</b> data. Penarikan data masih berlanjut...`;
+           // 1. Teks informasi cukup angka saja (tanpa link)
+           progressText.innerHTML = `Selesai menarik <b>${totalDataTerkumpul.toLocaleString('id-ID')}</b> data. Penarikan data masih berlanjut...`;
            
-           // +++ KUNCI PERBAIKAN: Tombol hanya muncul jika data >= 20.000 +++
-           if (totalDataTerkumpul >= 20000) {
-             teksLinkBerhenti = `<a href="#" onclick="window.konfirmasiBerhenti(); return false;" style="color:#7b0d0c; font-weight:bold; display:inline-block;">Klik di sini</a> jika Anda ingin mencukupkan pencarian`;
-           }
-progressText.innerHTML = `Selesai menarik <b>${totalDataTerkumpul.toLocaleString('id-ID')}</b> data. Penarikan data masih berlanjut...`;
-
+           // 2. +++ PERBAIKAN TOMBOL "Cukupkan Pencarian?" +++
 if (totalDataTerkumpul >= 20000) {
   let wadahTombol = document.getElementById('wadah-tombol-berhenti');
   if (wadahTombol && wadahTombol.innerHTML === '') {
