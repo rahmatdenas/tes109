@@ -415,35 +415,43 @@ Cluster = new L.markerClusterGroup({
 }).addTo(Map);
 
   // KENDALIKAN MANUAL KLIK PADA KLASTER
-  Cluster.on('clusterclick', function (a) {
-    let cluster = a.layer;
-    let count = cluster.getChildCount();
-    
-    // Cek apakah batas ujung titik sama persis (menandakan koordinat bertumpuk sempurna)
-    let bounds = cluster.getBounds();
-    let isSamePoint = bounds.getSouthWest().equals(bounds.getNorthEast());
-    
-    let currentZoom = Map.getZoom();
-    let maxZoom = TILE_LAYER_MAX_ZOOM; 
-    
-    // Skenario 1: Jika sudah di zoom maksimal ATAU titiknya benar-benar bertumpuk
-if (currentZoom >= maxZoom || isSamePoint) {
-      if (count > 60) {
-        // KUNCI PERBAIKAN: Gunakan fungsi dialog kustom kita, hapus setTimeout!
-        tampilkanDialog(
-          `Terlalu banyak data di titik ini (<b>${count} item</b>).<br><br>Untuk melihatnya, silakan buka daftar indeks dan persempit pencarian wilayah.`, 
-          "alert", 
-          "Titik Terlalu Padat"
-        );
-      } else {
-                // Jika masih di bawah 60, izinkan mekar (spiderfy)
-        cluster.spiderfy();
-      }
-    } else {
-      // Normal: Peta belum mentok, izinkan zoom mendekat
-      Map.fitBounds(cluster.getBounds());
+Cluster = new L.markerClusterGroup({
+  maxClusterRadius: function(zoom) {
+    let z = Math.round(zoom);        
+    if (z <= 15) return 50;
+    if (z === 16) return 35;
+    if (z === 17) return 20;
+    return 10; 
+  },
+  zoomToBoundsOnClick: true, // KEMBALIKAN KE TRUE
+  spiderfyOnMaxZoom: true    // KEMBALIKAN KE TRUE
+}).addTo(Map);
+
+// GANTI event clusterclick Anda menjadi seperti ini:
+Cluster.on('clusterclick', function (a) {
+  let cluster = a.layer;
+  let count = cluster.getChildCount();
+  let currentZoom = Map.getZoom();
+  let maxZoom = TILE_LAYER_MAX_ZOOM;
+  
+  // Deteksi jika kluster akan melakukan spiderfy (mekar)
+  // Ini terjadi jika sudah mentok maxZoom, ATAU koordinatnya sama persis
+  let bounds = cluster.getBounds();
+  let isSamePoint = bounds.getSouthWest().equals(bounds.getNorthEast());
+
+  if (currentZoom >= maxZoom || isSamePoint) {
+    if (count > 60) {
+      // Cegah Leaflet memekarkan kluster secara internal
+      cluster.unspiderfy(); 
+      
+      tampilkanDialog(
+        `Terlalu banyak data di titik ini (<b>${count} item</b>).<br><br>Untuk melihatnya, silakan buka daftar indeks dan persempit pencarian wilayah.`, 
+        "alert", 
+        "Titik Terlalu Padat"
+      );
     }
-  });
+  }
+});
 }
 
 // Tambahkan parameter 'signal' di bagian akhir
@@ -789,7 +797,6 @@ function activateMapMarker(qid) {
 
   try {
     Map.closePopup();
-    Map.stop();
 
     let countSameLocation = 0;
     currentFilteredRecords.forEach(r => {
