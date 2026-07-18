@@ -531,19 +531,34 @@ async function populateImageAndWikipediaData() {
   // =========================================================
   // FUNGSI PEMBANTU: Menarik 1 kloter (1.000 data) dengan aman
   // =========================================================
-  const tarikSatuKloter = async (cicilan) => {
+const tarikSatuKloter = async (cicilan) => {
     let kueriFinal = SPARQL_QUERY_3_TEMPLATE.replace('<PLACEHOLDER_QIDS>', cicilan.join(' '));
     try {
       await queryWdqsThenProcess(kueriFinal, function(result) {
-        let record = Records[result.siteQid.value];      
+        
+        // 1. PROTEKSI QID: Pastikan kita hanya mengambil kodenya (misal "Q123"), bukan URL utuh
+        let rawQid = result.siteQid.value;
+        let cleanQid = rawQid.includes('entity/') ? rawQid.split('entity/')[1] : rawQid;
+        let record = Records[cleanQid];      
+        
         if (!record) return; 
-        if ('image' in result && !record.imageFilename) record.imageFilename = extractImageFilename(result.image);
-        if ('wikipediaUrlTitle' in result) record.articleTitle = decodeURIComponent(result.wikipediaUrlTitle.value);
+
+        // 2. KUNCI GAMBAR: Hapus "!record.imageFilename" agar sistem SELALU 
+        // memaksa menimpa data kotor dengan nama file yang sudah bersih
+        if ('image' in result) {
+          record.imageFilename = extractImageFilename(result.image);
+        }
+
+        // 3. KUNCI ARTIKEL: Potong URL panjang, dan ambil judul akhirnya saja
+        if ('wikipediaUrlTitle' in result) {
+          let rawArt = result.wikipediaUrlTitle.value;
+          // Mengambil kata setelah garis miring (/) terakhir
+          record.articleTitle = decodeURIComponent(rawArt.substring(rawArt.lastIndexOf('/') + 1));
+        }
+
       });
     } catch (error) {
-      // Jika dibatalkan user, lempar errornya agar proses utama berhenti
       if (error === 'ABORTED') throw error;
-      // Jika hanya gagal jaringan/timeout Wikidata, abaikan agar kloter lain tetap jalan
       console.warn("1 kloter gambar/artikel gagal ditarik, sistem melanjutkan kloter lainnya...", error);
     }
   };
