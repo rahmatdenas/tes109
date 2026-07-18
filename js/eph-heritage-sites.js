@@ -176,7 +176,7 @@ function populateProvinceTypesData() {
         </h3>
         <p style="color: #666; font-size:14px; margin-bottom: 25px;">Harap menunggu sebentar...</p>
         <div class="loader" style="margin: 0 auto; width: 40px; height: 40px; border-width: 4px;"></div>
-      <div id="wadah-tombol-berhenti" style="margin-top: 25px;"></div>
+      <div id="wadah-tombol-berhenti" style="margin-top: 30px;"></div>
       </div>
     `;
   }
