@@ -34,6 +34,7 @@ var lastValidHash   = 'landing';
 var isRevertingHash = false;
 var loadingTimeoutToken = null;
 var searchDebounceToken = null;
+var renderTimeoutToken = null;
 
 // =========================================================
 // FUNGSI DIALOG KUSTOM (Pengganti alert & confirm)
