@@ -476,6 +476,14 @@ async function populateImageAndWikipediaData() {
           applyIntersectionFilter(true); 
         }
       }
+      
+      // +++ DIPINDAHKAN KE SINI +++
+      // Hanya mengembalikan teks tombol setelah perulangan persentase untuk data > 20.000 selesai
+      // Catatan: Jika tombol Anda memiliki ikon HTML (misalnya <i>), Anda bisa mengganti
+      // .textContent di bawah menjadi .innerHTML = '<i class="..."></i> Memiliki Gambar'
+      if (btnImg) btnImg.textContent = 'Memiliki Gambar';
+      if (btnArt) btnArt.textContent = 'Memiliki Artikel';
+      // +++++++++++++++++++++++++++
     }
   } catch (error) {
     if (error === 'ABORTED' || (error && error.name === 'AbortError')) {
@@ -486,9 +494,6 @@ async function populateImageAndWikipediaData() {
   }
 
   if (signal && signal.aborted) return;
-
-  if (btnImg) btnImg.textContent = 'Memiliki Gambar';
-  if (btnArt) btnArt.textContent = 'Memiliki Artikel';
 }
 
 function populateImportantEventsData(qid) {
