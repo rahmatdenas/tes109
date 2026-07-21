@@ -508,6 +508,31 @@ function generateFilterSelect() {
   }
 }
 
+// BARU: fungsi terpisah, supaya bisa dipanggil dari debounce ATAU dipaksa langsung
+function renderMarkerSekarang(validRecords, preventZoom) {
+  let validMarkers = [];
+  validRecords.forEach(record => {
+    if (record.mapMarker) validMarkers.push(record.mapMarker);
+  });
+
+  if (validMarkers.length > 0) {
+    Cluster.addLayers(validMarkers);
+    if (!preventZoom) {
+      Map.flyToBounds(Cluster.getBounds(), { duration: 0.5 });
+    }
+  }
+  renderTimeoutToken = null;
+}
+
+// BARU: dipanggil dari activateMapMarker (JS 1) kalau ada timer yang masih menggantung.
+// Ini SATU-SATUNYA jalan marker masuk cluster di luar alur normal — tidak ada jalur kedua lagi.
+window.paksaRenderMarkerSekarang = function() {
+  if (renderTimeoutToken) {
+    clearTimeout(renderTimeoutToken);          // batalkan timer lama
+    renderMarkerSekarang(currentFilteredRecords, true); // jalankan SEKARANG, tanpa flyToBounds
+  }
+};
+
 function applyIntersectionFilter(preventZoom = false) {
   if (!PrimaryDataIsLoaded) return;
 
@@ -515,8 +540,6 @@ function applyIntersectionFilter(preventZoom = false) {
   let ol = document.getElementById('index-list');
   ol.innerHTML = '';
 
-  let validMarkers = [];
-  
   let validRecords = Object.values(Records).filter(record => {
     // Filter Wilayah
     let matchRegion = false;
@@ -591,6 +614,12 @@ function applyIntersectionFilter(preventZoom = false) {
   currentFilteredRecords = validRecords;
   currentRenderIndex = 0; 
   renderNextChunk();
-  
-  // (Sisa logika debouncing peta sama persis seperti JS 3 Anda yang lama)
+  updateFeatureCounts(validRecords.length);
+
+  if (renderTimeoutToken) {
+    clearTimeout(renderTimeoutToken);
+  }
+  renderTimeoutToken = setTimeout(() => {
+    renderMarkerSekarang(validRecords, preventZoom);   // ← pindah ke fungsi terpisah
+  }, 150);
 }
