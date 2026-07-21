@@ -211,31 +211,37 @@ function setupLandingForm() {
     });
   }
 
-  // 2. Lokasi Berjenjang
+// 2. Lokasi Berjenjang
   let lokasiUtama = document.getElementById('lokasi-utama-input');
   let wadahProvinsi = document.getElementById('wadah-provinsi');
   let wadahLuarNegeri = document.getElementById('wadah-luar-negeri');
-  let wadahLokasiCustom = document.getElementById('wadah-lokasi-custom');
+  
+  // Tangkap inputnya secara langsung karena div wadah sudah dihapus
+  let lokasiCustomInput = document.getElementById('lokasi-custom-input');
+  let petunjukLokasiCustom = document.getElementById('petunjuk-lokasi-custom');
   
   let benuaInput = document.getElementById('benua-input');
   let negaraInput = document.getElementById('negara-input');
 
   if (lokasiUtama) {
     lokasiUtama.addEventListener('change', function() {
+      // Sembunyikan semuanya terlebih dahulu
       if (wadahProvinsi) wadahProvinsi.style.display = 'none';
       if (wadahLuarNegeri) wadahLuarNegeri.style.display = 'none';
-      if (wadahLokasiCustom) wadahLokasiCustom.style.display = 'none';
+      if (lokasiCustomInput) lokasiCustomInput.style.display = 'none';
+      if (petunjukLokasiCustom) petunjukLokasiCustom.style.display = 'none';
 
+      // Munculkan sesuai pilihan
       if (this.value === 'indonesia') {
         if (wadahProvinsi) wadahProvinsi.style.display = 'block';
       } else if (this.value === 'luar_negeri') {
         if (wadahLuarNegeri) wadahLuarNegeri.style.display = 'block';
         if (benuaInput) benuaInput.dispatchEvent(new Event('change')); // Paksa filter negara
       } else if (this.value === 'custom') {
-        if (wadahLokasiCustom) {
-          wadahLokasiCustom.style.display = 'block';
-          let customInput = document.getElementById('lokasi-custom-input');
-          if (customInput) customInput.focus();
+        if (lokasiCustomInput) {
+          lokasiCustomInput.style.display = 'inline-block'; // Agar tidak melebar
+          if (petunjukLokasiCustom) petunjukLokasiCustom.style.display = 'block';
+          lokasiCustomInput.focus();
         }
       }
     });
