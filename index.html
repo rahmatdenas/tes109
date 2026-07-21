@@ -92,7 +92,7 @@
 
     <!-- LAPIS 2B & 3: Luar Negeri (Benua & Negara) -->
     <div id="wadah-luar-negeri" style="display: none;">
-      <select id="benua-input" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; margin-bottom: 10px;">
+      <select id="benua-input" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; margin-bottom: 15px;">
         <option value="eropa" selected>Eropa</option>
         <option value="asia">Asia</option>
         <option value="afrika">Afrika</option>
@@ -303,11 +303,9 @@
       </select>
     </div>
 
-    <!-- LAPIS 2C: Lokasi Custom -->
-    <div id="wadah-lokasi-custom" style="display: none; margin-bottom: 5px;">
-      <input type="text" id="lokasi-custom-input" placeholder="Isi 1 Q-ID (Contoh: Q3125978)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 100%; font-family: monospace;">
-      <small style="color: #666; display:block; margin-top:4px;">*Hanya isi 1 Q-ID untuk lokasi khusus.</small>
-    </div>
+<!-- LAPIS 2C: Lokasi Custom (Tanpa Div dan Tanpa Width 100%) -->
+    <input type="text" id="lokasi-custom-input" placeholder="Isi 1 Q-ID (Misal: Q3125978)" style="display: none; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; margin-top: 10px;">
+    <small id="petunjuk-lokasi-custom" style="display: none; color: #666; margin-top: 5px;">*Hanya isi 1 Q-ID untuk lokasi khusus.</small>
 
     <!-- ============================================================== -->
     <!-- MENU KATEGORI DATA -->
@@ -432,9 +430,9 @@
     
     <label for="jenis-input" style="font-weight: bold; margin-top: 10px; display: block;">Q-ID Kategori (Otomatis):</label>
     <input type="text" id="jenis-input" value="Q3199141 Q3191695" readonly style="padding: 10px; border-radius: 5px; border: 1px solid #ccc; background-color: #f5f5f5; width: 100%; font-family: monospace;">
-    <small style="color: #666; display: block; margin-top: 4px;">*Pisahkan dengan spasi untuk >1 objek khusus.</small>
+    <small style="color: #666; display: block; margin-top: 5px;">*Pisahkan dengan spasi untuk >1 objek khusus.</small>
 
-    <button id="btn-mulai" style="margin-top: 18px; padding: 12px; background-color: #7b0d0c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 16px;font-family: 'Open Sans', sans-serif;">Tarik Data</button>
+    <button id="btn-mulai" style="margin-top: 10px; padding: 12px; background-color: #7b0d0c; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 16px;font-family: 'Open Sans', sans-serif;">Tarik Data</button>
  </section>
 
 <div id="loading" class="panel-content" data-display="flex">
