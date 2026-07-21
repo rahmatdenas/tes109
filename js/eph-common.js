@@ -796,8 +796,19 @@ function activateMapMarker(qid) {
   try {
     Map.closePopup();
 
+    // GANTI: jangan addLayer() manual langsung (itu biang keladinya).
+    // Paksa timer debounce yang menggantung untuk jalan SEKARANG, supaya
+    // hanya ada SATU jalur penyisipan, tidak dobel.
     if (!Cluster.hasLayer(record.mapMarker)) {
-      Cluster.addLayer(record.mapMarker);
+      if (typeof window.paksaRenderMarkerSekarang === 'function') {
+        window.paksaRenderMarkerSekarang();
+      }
+      // Jaring pengaman terakhir: kalau marker ini memang di luar
+      // currentFilteredRecords (kena filter aktif), tetap paksa tampil
+      // karena pengguna secara eksplisit membuka detailnya.
+      if (!Cluster.hasLayer(record.mapMarker)) {
+        Cluster.addLayer(record.mapMarker);
+      }
     }
 
     let countSameLocation = 0;
